@@ -4,7 +4,7 @@ import threading
 
 # Configuración del servidor
 HOST = '127.0.0.1'  # La dirección IP de la máquina en la que se ejecuta el servidor
-PORT = 65432        # Puerto que se utiliza para la comunicación
+PORT = 65432        # Puerto que se utiliza 
 
 
 name = input("Select your name: ")
