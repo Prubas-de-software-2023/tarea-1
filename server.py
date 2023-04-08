@@ -1,68 +1,126 @@
 import socket
 import threading
-
-
+import logging
+import sys
+import os
 # Configuración del servidor
-HOST = '127.0.0.1'  # La dirección IP de la máquina en la que se ejecuta el servidor
-PORT = 65432        # Puerto que se utiliza 
 
+HOST = '127.0.0.1'  # IP donde es ejecutado el servidor
+PORT = 65432        # Puerto utilizado
 
 name = input("Select your name: ")
 name_length = str(len(name))
 
+if os.path.exists("server.log"):
+    os.remove("server.log")
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s %(levelname)s: %(message)s',
+    handlers=[
+        logging.FileHandler('server.log', mode='a'),
+    ]
+)
+
+
 
 # Creación del socket del servidor
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))  # Asociación del socket a la dirección y puerto especificados
-    s.listen()            # Escucha de nuevas conexiones
+    try:
+        s.bind((HOST, PORT))  
+        s.listen()            
 
-    # Función para manejar la recepción de mensajes del cliente
-    def receive_thread(conn):
-        def split_message(message):
-            num = message.split(':')
-            name_length = int(num[0])
-            name = num[1][0:name_length]
-            return name, message.split(name)[1]
+        # Recepción de mensajes desde el cliente
+        def receive_thread(conn):
+            def split_message(message):
+                num = message.split(':')
+                name_length = int(num[0])
+                name = num[1][0:name_length]
+                return name, message.split(name)[1]
 
-        while True:
-            try:
-                data = conn.recv(1024)  # Recepción de datos del cliente
-                if not data:
+            while True:
+                try:
+                    data = conn.recv(1024)  
+                    if not data:
+                        break
+                    else:
+                        name, message = split_message(data.decode())
+                        print(f'{name} dice: {message}')
+                        logging.info(f'{name} ha enviado un mensaje que dice: {message}')
+
+
+                except KeyboardInterrupt:
+                    logging.warning('Interrupción de teclado detectada.')
+                    pass        
+                except socket.error as e:
+                    logging.warning(f'Error de socket: {e}')
                     break
-                else:
-                    name, message = split_message(data.decode())
-                    print(f'{name} dice: {message}')
-            except Exception as e:
-                print(f'Error: {e}')
-                break
+                except Exception as e:
+                    logging.warning(f'Error: {e}')
+                    break
 
-        conn.close()
 
-    # Función para manejar el envío de mensajes al cliente
-    def send_thread(conn):
-        while True:
-            try:
-                message = input('')
-                message = name_length + ':' + name + message
-                conn.sendall(message.encode())  # Envío de los datos recibidos de vuelta al cliente
-            except Exception as e:
-                print(f'Error: {e}')
-                break
+            conn.close()
 
-        conn.close()
+        # Envio de mensajes hacia el cliente
+        def send_thread(conn):
+            while True:
+                try:
+                    message = input('')
+                    if len(message) > 100 or len(message) < 1:
+                        print("Error: la longitud del mensaje debe ser entre 1 y 100 caracteres.")
+                        continue
+                    else:
+                        logging.info(f'{name} ha enviado un mensaje que dice: {message}')
+                        message = str(name_length) + ':' + name + message
+                        conn.sendall(message.encode())
 
-    # Espera de una conexión
-    conn, addr = s.accept()
-    print('Conexión establecida con', addr)
+                        
 
-    # Creación de los hilos para manejar la recepción y envío de mensajes
-    receive = threading.Thread(target=receive_thread, args=(conn,))
-    send = threading.Thread(target=send_thread, args=(conn,))
 
-    # Inicio de los hilos
-    receive.start()
-    send.start()
+                    
+                    if message == 'exit()':
+                        print('Se ha terminado la conexión.')
+                        break
 
-    # Espera a que los hilos terminen
-    receive.join()
-    send.join()
+
+                except KeyboardInterrupt:
+                    logging.warning('Interrupción de teclado detectada.')
+                    pass        
+                except socket.error as e:
+                    logging.warning(f'Error de socket: {e}')
+                    break        
+                except Exception as e:
+                    logging.warning(f'Error: {e}')
+                    break
+
+                
+            conn.close()
+
+
+        try:
+            # Espera de una conexión
+            conn, addr = s.accept()
+            logging.info(f'Conexión establecida entre {name} y {addr}')
+        
+        except socket.error as e:
+            logging.warning(f'Error al conectar con el cliente: {e}')
+            sys.exit()
+
+        # Hilos para la recepcion y envio de mensajes respectivamente
+        receive = threading.Thread(target=receive_thread, args=(conn,))
+        send = threading.Thread(target=send_thread, args=(conn,))
+
+        receive.start()
+        send.start()
+
+        receive.join()
+        send.join()
+
+    except socket.error as e:
+        logging.warning(f'Error de socket: {e}')
+        sys.exit(1)
+
+    except Exception as e:
+        logging.warning(f'Error: {e}')
+        sys.exit(1)
