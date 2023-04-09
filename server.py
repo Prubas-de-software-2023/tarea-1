@@ -3,6 +3,7 @@ import threading
 import logging
 import sys
 import os
+import base64
 # Configuración del servidor
 
 HOST = '127.0.0.1'  # IP donde es ejecutado el servidor
@@ -30,21 +31,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))  
         s.listen()            
 
+        def split_message(message):
+            num = message.split(':')
+            name_length = int(num[0])
+            name = num[1][0:name_length]
+            return name, message.split(name)[1]
+        
         # Recepción de mensajes desde el cliente
         def receive_thread(conn):
-            def split_message(message):
-                num = message.split(':')
-                name_length = int(num[0])
-                name = num[1][0:name_length]
-                return name, message.split(name)[1]
-
             while True:
                 try:
                     data = conn.recv(1024)  
                     if not data:
                         break
                     else:
-                        name, message = split_message(data.decode())
+                        decoded_message = base64.b64decode(data)
+                        name, message = split_message(decoded_message)
                         print(f'{name} dice: {message}')
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
 
@@ -73,12 +75,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     else:
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
                         message = str(name_length) + ':' + name + message
-                        conn.sendall(message.encode())
+                        encoded_message = base64.b64encode(message)        
+                        conn.sendall(encoded_message)
 
                         
-
-
-                    
                     if message == 'exit()':
                         print('Se ha terminado la conexión.')
                         break
