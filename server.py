@@ -3,24 +3,43 @@ import threading
 import logging
 import sys
 import os
+import base64
+from datetime import date
+
+
+def obtain_log_files():
+    fecha_lista = date.today()
+    fecha = str(fecha_lista).split("-")
+
+    if not os.path.isdir(fecha[0]+'/'+fecha[1]):
+        os.makedirs(fecha[0]+'/'+fecha[1])
+
+    ###Configurando los archivos log
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(message)s',
+                        datefmt='%a, %d %b %Y %H:%M:%S',
+                        filename= fecha[0]+'/'+fecha[1]+'/'+'cartola_'+fecha[2]+'.log',
+                        filemode='a')
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+
+
 # Configuración del servidor
 
 HOST = '127.0.0.1'  # IP donde es ejecutado el servidor
 PORT = 65432        # Puerto utilizado
 
+obtain_log_files()
+
 name = input("Select your name: ")
 name_length = str(len(name))
 
-if os.path.exists("server.log"):
-    os.remove("server.log")
 
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s %(levelname)s: %(message)s',
-    handlers=[
-        logging.FileHandler('server.log', mode='a'),
-    ]
-)
+
+
 
 
 
@@ -30,21 +49,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))  
         s.listen()            
 
+        def split_message(message):
+            num = message.split(':')
+            name_length = int(num[0])
+            name = num[1][0:name_length]
+            return name, message.split(name)[1]
+        
         # Recepción de mensajes desde el cliente
         def receive_thread(conn):
-            def split_message(message):
-                num = message.split(':')
-                name_length = int(num[0])
-                name = num[1][0:name_length]
-                return name, message.split(name)[1]
-
             while True:
                 try:
                     data = conn.recv(1024)  
                     if not data:
                         break
                     else:
-                        name, message = split_message(data.decode())
+                        decoded_message = base64.b64decode(data)
+                        name, message = split_message(decoded_message)
                         print(f'{name} dice: {message}')
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
 
@@ -73,20 +93,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     else:
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
                         message = str(name_length) + ':' + name + message
-                        conn.sendall(message.encode())
+                        encoded_message = base64.b64encode(message)        
+                        conn.sendall(encoded_message)
 
                         
-
-
-                    
                     if message == 'exit()':
                         print('Se ha terminado la conexión.')
+                        conn.close()
                         break
 
 
                 except KeyboardInterrupt:
                     logging.warning('Interrupción de teclado detectada.')
-                    pass        
+                    break        
                 except socket.error as e:
                     logging.warning(f'Error de socket: {e}')
                     break        
