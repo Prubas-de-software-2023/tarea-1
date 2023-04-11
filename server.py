@@ -30,7 +30,7 @@ def obtain_log_files():
 # Configuración del servidor
 
 HOST = '127.0.0.1'  # IP donde es ejecutado el servidor
-PORT = 65432        # Puerto utilizado
+PORT = 65433        # Puerto utilizado
 
 obtain_log_files()
 
@@ -63,7 +63,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     if not data:
                         break
                     else:
-                        decoded_message = base64.b64decode(data)
+                        decoded_message =  base64.b64decode(data).decode('utf-8')
                         name, message = split_message(decoded_message)
                         print(f'{name} dice: {message}')
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
@@ -87,20 +87,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             while True:
                 try:
                     message = input('')
+                    if message == 'exit()':
+                        print('Se ha terminado la conexión.')
+                        conn.close()
+                        break
                     if len(message) > 100 or len(message) < 1:
                         print("Error: la longitud del mensaje debe ser entre 1 y 100 caracteres.")
                         continue
                     else:
                         logging.info(f'{name} ha enviado un mensaje que dice: {message}')
                         message = str(name_length) + ':' + name + message
-                        encoded_message = base64.b64encode(message)        
+                        encoded_message = base64.b64encode(message.encode('utf-8'))        
                         conn.sendall(encoded_message)
 
                         
-                    if message == 'exit()':
-                        print('Se ha terminado la conexión.')
-                        conn.close()
-                        break
+
 
 
                 except KeyboardInterrupt:
