@@ -3,6 +3,7 @@ import threading
 import logging
 import os
 from datetime import date
+import base64
 
 
 def obtain_log_files():
@@ -30,7 +31,7 @@ def obtain_log_files():
 
 # Configuración del servidor
 HOST = '127.0.0.1'  # La dirección IP de la máquina en la que se ejecuta el servidor
-PORT = 65432        # Puerto que se utiliza para la comunicación
+PORT = 65433        # Puerto que se utiliza para la comunicación
 
 name = input("Select your name: ")
 name_lenght = str(len(name))
@@ -54,7 +55,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if not data:
                     break
                 else:
-                    name, message = split_message(data.decode()) #Desempaquetar mensaje
+                    decoded_message = base64.b64decode(data).decode('utf-8')
+                    name, message = split_message(decoded_message) #Desempaquetar mensaje
                 print(f'{name} dice: {message}') #Mostrar mensaje
                 logging.info("Se ha recibido el mensaje") #Guardar en log
             except Exception as ex:
@@ -79,11 +81,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 conn.close()
                 break
             try:
-                conn.sendall(message.encode())  # Envío de los datos recibidos de vuelta al cliente
+                encoded_message = base64.b64encode(message.encode('utf-8'))
+                conn.sendall(encoded_message)  # Envío de los datos recibidos de vuelta al cliente
                 logging.info("Se ha enviado mensaje")
             except Exception as ex:
                 logging.error("Ha ocurrido un error al enviar mensaje %s", str(ex))
-            print("Hola soy el send")
 
     try:
         s.connect((HOST, PORT))  # Conexión al servidor
