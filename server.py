@@ -36,7 +36,7 @@ obtain_log_files()
 
 name = input("Select your name: ")
 name_length = str(len(name))
-
+logging.info("Se ingresado como: %s", name)
 
 
 

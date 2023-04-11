@@ -73,8 +73,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         while True:
             message = input('')
             if(message != "exit()"):
-                while(len(message)>100): #Entrar en caso de error si tiene mas de 100 caracteres
-                    print("Su mensaje tiene mas de 100 caracteres!") 
+                while(len(message)>100 or len(message)==0): #Entrar en caso de error si tiene mas de 100 caracteres
+                    print("Su mensaje debe tener entre 1 y 100 caracteres!") 
                     message = input('')
                 message = name_lenght + ':' + name + message #Empaquetar mensaje
             else:
