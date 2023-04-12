@@ -33,10 +33,14 @@ def obtain_log_files():
 HOST = '127.0.0.1'  # La dirección IP de la máquina en la que se ejecuta el servidor
 PORT = 65433        # Puerto que se utiliza para la comunicación
 
+
 name = input("Select your name: ")
+while(":" in name):
+    print("Invalid character ':'")
+    name = input("Select your name: ")
 name_lenght = str(len(name))
 obtain_log_files()
-logging.info("Se ingresado como: %s", name)
+logging.info("Joined as: %s", name)
 
 # Creación del socket del cliente
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -57,13 +61,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 else:
                     decoded_message = base64.b64decode(data).decode('utf-8')
                     name, message = split_message(decoded_message) #Desempaquetar mensaje
-                print(f'{name} dice: {message}') #Mostrar mensaje
-                logging.info("Se ha recibido el mensaje") #Guardar en log
+                print(f'{name} says: {message}') #Mostrar mensaje
+                logging.info("Message received") #Guardar en log
             except Exception as ex:
                 if(ex.args[0]==10053):
-                    logging.info("Se ha cerrado la conexion")
+                    logging.info("Conection close")
                 else:
-                    logging.error("Error con la conexion al servidor: %s, porfavor reinicie", str(ex))
+                    logging.error("Error with server connection: %s, please restart", str(ex))
                 conn.close()
                 break
             
@@ -74,7 +78,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             message = input('')
             if(message != "exit()"):
                 while(len(message)>100 or len(message)==0): #Entrar en caso de error si tiene mas de 100 caracteres
-                    print("Su mensaje debe tener entre 1 y 100 caracteres!") 
+                    print("Message must have 1 and 100 characters!") 
                     message = input('')
                 message = name_lenght + ':' + name + message #Empaquetar mensaje
             else:
@@ -83,9 +87,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 encoded_message = base64.b64encode(message.encode('utf-8'))
                 conn.sendall(encoded_message)  # Envío de los datos recibidos de vuelta al cliente
-                logging.info("Se ha enviado mensaje")
+                logging.info("Message send")
             except Exception as ex:
-                logging.error("Ha ocurrido un error al enviar mensaje %s", str(ex))
+                logging.error("Error with send message %s", str(ex))
 
     try:
         s.connect((HOST, PORT))  # Conexión al servidor
@@ -104,4 +108,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         s.close()
     except Exception as ex:
-        logging.error("Ha ocurrido un error: %s", str(ex))
+        logging.error("Error: %s", str(ex))

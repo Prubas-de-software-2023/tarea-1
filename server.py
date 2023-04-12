@@ -35,8 +35,11 @@ PORT = 65433        # Puerto utilizado
 obtain_log_files()
 
 name = input("Select your name: ")
+while(":" in name):
+    print("Invalid character ':'")
+    name = input("Select your name: ")
 name_length = str(len(name))
-logging.info("Se ingresado como: %s", name)
+logging.info("Joined as: %s", name)
 
 
 
@@ -65,15 +68,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     else:
                         decoded_message =  base64.b64decode(data).decode('utf-8')
                         name, message = split_message(decoded_message)
-                        print(f'{name} dice: {message}')
-                        logging.info(f'{name} ha enviado un mensaje que dice: {message}')
+                        print(f'{name} says: {message}')
+                        logging.info(f'{name} send message which says: {message}')
 
 
                 except KeyboardInterrupt:
-                    logging.warning('Interrupción de teclado detectada.')
+                    logging.warning('Keyboard Interrump.')
                     pass        
                 except socket.error as e:
-                    logging.warning(f'Error de socket: {e}')
+                    logging.warning(f'Socket Error: {e}')
                     break
                 except Exception as e:
                     logging.warning(f'Error: {e}')
@@ -88,14 +91,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 try:
                     message = input('')
                     if message == 'exit()':
-                        print('Se ha terminado la conexión.')
+                        print('Connection close.')
                         conn.close()
                         break
                     if len(message) > 100 or len(message) < 1:
-                        print("Error: la longitud del mensaje debe ser entre 1 y 100 caracteres.")
+                        print("Error: Message must have 1 and 100 characters")
                         continue
                     else:
-                        logging.info(f'{name} ha enviado un mensaje que dice: {message}')
+                        logging.info(f'{name} send message which says: {message}')
                         message = str(name_length) + ':' + name + message
                         encoded_message = base64.b64encode(message.encode('utf-8'))        
                         conn.sendall(encoded_message)
@@ -105,10 +108,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
 
                 except KeyboardInterrupt:
-                    logging.warning('Interrupción de teclado detectada.')
+                    logging.warning('Keyboard Interrupt.')
                     break        
                 except socket.error as e:
-                    logging.warning(f'Error de socket: {e}')
+                    logging.warning(f'Socket Error: {e}')
                     break        
                 except Exception as e:
                     logging.warning(f'Error: {e}')
@@ -121,10 +124,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             # Espera de una conexión
             conn, addr = s.accept()
-            logging.info(f'Conexión establecida entre {name} y {addr}')
+            logging.info(f'Connection sucessfull with {name} and {addr}')
         
         except socket.error as e:
-            logging.warning(f'Error al conectar con el cliente: {e}')
+            logging.warning(f'Error to connect client: {e}')
             sys.exit()
 
         # Hilos para la recepcion y envio de mensajes respectivamente
@@ -138,7 +141,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         send.join()
 
     except socket.error as e:
-        logging.warning(f'Error de socket: {e}')
+        logging.warning(f'Socket Error: {e}')
         sys.exit(1)
 
     except Exception as e:
