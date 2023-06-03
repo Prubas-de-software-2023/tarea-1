@@ -1,5 +1,5 @@
 # TAREA 1 PRUEBAS DE SOFTWARE
-- Nombre: Software de intercambio de mensajes.
+- Nombre: Software de intercambio de mensajes. b
 - Descripción: Software que será utilizado para el envío y la recepcion de mensajes de texto a traves de la red por medio de una codificación/decodificación elaborada propiamente.
 - Instalación:
     Para llevar a cabo la instalación se debe tener el lenguaje de prorgramación Python, que se puede descargar desde su página principal (https://www.python.org) y luego se deberán seguir los siguientes pasos:
