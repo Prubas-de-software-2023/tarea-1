@@ -1,4 +1,4 @@
-# TAREA 1 PRUEBAS DE SOFTWARE
+# TAREA 1 PRUEBAS DE SOFTWARE (ORH)
 - Nombre: Software de intercambio de mensajes.
 - Descripción: Software que será utilizado para el envío y la recepcion de mensajes de texto a traves de la red por medio de una codificación/decodificación elaborada propiamente.
 - Instalación:
